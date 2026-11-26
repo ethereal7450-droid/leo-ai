@@ -337,7 +337,7 @@ class WakeWordService : Service(), TextToSpeech.OnInitListener {
         tts?.stop()
         tts?.shutdown()
         getSharedPreferences("leo", MODE_PRIVATE).edit().putBoolean("wake_enabled", false).apply()
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_REMOVE) else stopForeground(true)
         super.onDestroy()
     }
 }
