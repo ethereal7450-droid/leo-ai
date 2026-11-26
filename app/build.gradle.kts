@@ -42,6 +42,7 @@ dependencies {
     implementation("androidx.compose.material:material")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx:v1.13.5")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
