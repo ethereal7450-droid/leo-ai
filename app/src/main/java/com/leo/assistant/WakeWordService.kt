@@ -27,6 +27,12 @@ import java.net.URL
 import java.util.Locale
 import kotlin.concurrent.thread
 import kotlin.math.max
+import com.k2fsa.sherpa.onnx.FeatureConfig
+import com.k2fsa.sherpa.onnx.KeywordSpotter
+import com.k2fsa.sherpa.onnx.KeywordSpotterConfig
+import com.k2fsa.sherpa.onnx.OnlineModelConfig
+import com.k2fsa.sherpa.onnx.OnlineStream
+import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
 
 class WakeWordService : Service(), TextToSpeech.OnInitListener {
     companion object {
@@ -133,7 +139,7 @@ class WakeWordService : Service(), TextToSpeech.OnInitListener {
                         val phrase = spotter?.getResult(kwsStream)?.keyword.orEmpty()
                         if (phrase.isNotBlank()) {
                             listening = false
-                            main.post { onWakeDetected() }
+                            main.postDelayed({ onWakeDetected() }, 300)
                             return@thread
                         }
                     }
