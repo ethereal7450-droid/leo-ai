@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         var showSettings by remember { mutableStateOf(apiKey.isBlank()) }
         var input by remember { mutableStateOf("") }
         var busy by remember { mutableStateOf(false) }
+        var wakeEnabled by remember { mutableStateOf(prefs.getBoolean("wake_enabled", false)) }
 
         val messages = remember {
             mutableStateListOf<ChatMessage>().apply {
@@ -108,11 +109,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
             ActivityResultContracts.RequestPermission()
         ) { granted ->
             if (granted) startSpeech(speechLauncher)
-            else Toast.makeText(
-                this,
-                "Microphone permission is needed for voice input.",
-                Toast.LENGTH_SHORT
-            ).show()
+            else Toast.makeText(this, "Microphone permission is needed for voice input.", Toast.LENGTH_SHORT).show()
+        }
+
+        val wakePermission = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                startWakeService()
+                wakeEnabled = true
+            } else {
+                Toast.makeText(this, "Microphone permission is required for Hey LEO.", Toast.LENGTH_LONG).show()
+            }
         }
 
         MaterialTheme {
@@ -153,6 +161,33 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         StatusPill("AI CORE", if (apiKey.isNotBlank()) "CONNECTED" else "SET API KEY")
                         StatusPill("VOICE", "READY")
                         StatusPill("MEMORY", "LOCAL")
+                    }
+
+                    Button(
+                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                        onClick = {
+                            if (wakeEnabled) {
+                                stopWakeService()
+                                wakeEnabled = false
+                            } else if (ContextCompat.checkSelfPermission(
+                                    this@MainActivity, Manifest.permission.RECORD_AUDIO
+                                ) == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                startWakeService()
+                                wakeEnabled = true
+                            } else {
+                                wakePermission.launch(Manifest.permission.RECORD_AUDIO)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = if (wakeEnabled) Color(0xFF164B43) else Panel),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            if (wakeEnabled) "● HEY LEO — LISTENING · TAP TO STOP" else "ENABLE HEY LEO WAKE WORD",
+                            color = if (wakeEnabled) Color(0xFF8DF2C0) else Cyan,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
                     }
 
                     Spacer(Modifier.height(14.dp))
@@ -335,6 +370,22 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 }
             )
         }
+    }
+
+    private fun startWakeService() {
+        val intent = Intent(this, WakeWordService::class.java).setAction(WakeWordService.ACTION_START)
+        try {
+            ContextCompat.startForegroundService(this, intent)
+            getSharedPreferences("leo", MODE_PRIVATE).edit().putBoolean("wake_enabled", true).apply()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not start Hey LEO. Check microphone permission.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun stopWakeService() {
+        val intent = Intent(this, WakeWordService::class.java).setAction(WakeWordService.ACTION_STOP)
+        startService(intent)
+        getSharedPreferences("leo", MODE_PRIVATE).edit().putBoolean("wake_enabled", false).apply()
     }
 
     @Composable
