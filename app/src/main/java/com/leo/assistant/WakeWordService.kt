@@ -41,7 +41,7 @@ class WakeWordService : Service(), TextToSpeech.OnInitListener {
         private const val CHANNEL_ID = "leo_wake_service"
         private const val NOTIFICATION_ID = 4401
         private const val TAG = "LEO-WAKE"
-        private const val MODEL_DIR = "kws/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
+        private const val MODEL_DIR = "sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
     }
 
     private val main = Handler(Looper.getMainLooper())
