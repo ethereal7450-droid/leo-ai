@@ -1,46 +1,46 @@
-
 name: Build LEO APK
-
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
-
       - name: Install Android SDK
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-    
-
+      - name: Download offline wake-word model
+        run: |
+          mkdir -p app/src/main/assets
+          curl -fL "https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2" -o /tmp/leo-kws.tar.bz2
+          tar -xjf /tmp/leo-kws.tar.bz2 -C app/src/main/assets
+          MODEL="app/src/main/assets/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
+          rm -f "$MODEL"/*.int8.onnx
+          curl -fL "https://huggingface.co/mobilebytesensei/sherpa-onnx-kws-zipformer-gigaspeech-3.3M/resolve/main/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx" -o "$MODEL/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
+          curl -fL "https://huggingface.co/mobilebytesensei/sherpa-onnx-kws-zipformer-gigaspeech-3.3M/resolve/main/joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx" -o "$MODEL/joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
+          rm -rf "$MODEL/test_wavs" "$MODEL/README.md" "$MODEL/keywords_raw.txt" "$MODEL/bpe.model" "$MODEL/configuration.json"
+          test -s "$MODEL/decoder-epoch-12-avg-2-chunk-16-left-64.onnx"
+          test -s "$MODEL/tokens.txt"
+          test -s "$MODEL/keywords.txt"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-
       - name: Build APK
         run: gradle assembleDebug --stacktrace
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: LEO-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
-          
