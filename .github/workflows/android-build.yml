@@ -26,9 +26,6 @@ jobs:
           curl -fL "https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2" -o /tmp/leo-kws.tar.bz2
           tar -xjf /tmp/leo-kws.tar.bz2 -C app/src/main/assets
           MODEL="app/src/main/assets/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
-          rm -f "$MODEL"/*.int8.onnx
-          curl -fL "https://huggingface.co/mobilebytesensei/sherpa-onnx-kws-zipformer-gigaspeech-3.3M/resolve/main/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx" -o "$MODEL/encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
-          curl -fL "https://huggingface.co/mobilebytesensei/sherpa-onnx-kws-zipformer-gigaspeech-3.3M/resolve/main/joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx" -o "$MODEL/joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
           rm -rf "$MODEL/test_wavs" "$MODEL/README.md" "$MODEL/keywords_raw.txt" "$MODEL/bpe.model" "$MODEL/configuration.json"
           test -s "$MODEL/decoder-epoch-12-avg-2-chunk-16-left-64.onnx"
           test -s "$MODEL/tokens.txt"
